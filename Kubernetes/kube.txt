@@ -1,0 +1,109 @@
+http://ec2-52-42-219-183.us-west-2.compute.amazonaws.com:8282/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy/#!/login
+
+https://joshh.info/2018/kubernetes-dashboard-https-nodeport/
+kubeadm token list
+kubectl -n kube-system edit service kubernetes-dashboard
+kubectl -n kube-system get service kubernetes-dashboard
+kubectl describe serviceaccount dashboard
+
+
+kubectl describe secrets dashboard-token-74l8r
+kubeadm token create --print-join-command
+kubectl get secret $(kubectl get serviceaccount dashboard -o jsonpath="{.secrets[0].name}") -o jsonpath="{.data.token}" | base64 --decode
+eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRhc2hib2FyZC10b2tlbi03NGw4ciIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJkYXNoYm9hcmQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJmYjNjZWZiYy0yZGRmLTExZTktOTUwOS0wNmMyZmIzMGY5MGUiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpkYXNoYm9hcmQifQ.IacMPxlb67ExXVIcobHRC7UA3KRpknjObO1u1SFUlcFpBjdl3c_fNMHCfh55BJzxsBJQrDf9dcTPtSh07RaFQKs5J9l9KGNJBHlIfBw5zK7Jlm6yBLnYNw8_8PUHjytw_ksiSP3hxdITce4Jlv7690RFt8KXZa07zG5oDE8beahgk3ZO88Vj3OHf-_m2x_LFRkcB7VEMN6ac3QmuTWvYZ-4GE5yiGeC0vuh_W_b3SE3tD-T-3MjcfCEa93Wv4xEXrnwh0Jp2Knxv6D4hQdmk6DeBipjwfsBW6uWOQVQ8Xb55dtWIYcKuJyAXcb_Fj71OcBadPv4lUamqPdfnqCV2kw
+eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRhc2hib2FyZC10b2tlbi00cW04aCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJkYXNoYm9hcmQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJhZDkyZTY2My0zYTVlLTExZTktOTUzZi0wMDBkM2FhMGE2MDAiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpkYXNoYm9hcmQifQ.FT-O-80WrlAqvGzMvjLKV3zYnXBwMRXQLV4_2VEqKAzWhn82gFVdNQUTIe_oA7aOm-0S_CneP0amiZyCrs-_qkroc_fOOJ__rxxQ2cVmy9uJHikZDDGiSDgGKM2KwRYmuLL00eVPB-KLPwIL6g4hcSBWvvZKz2CQHBtEhwGg0Nmx17avqT9Jg4-Y2sIqx-OvSaxAkY9g3svImHwYXShe27ZHNu3sDUjWLOZfhv5tedNpStB0a2ZxNq13dnz6VmxnUVSO7XGnjTuTnKKTkVrEqT-U-sneEKOzURJDuMl7FJRnGUtlc5biFbwqfIcDJIEUYjkn0EyeszTXs1BVcgBEbw
+All service account 
+
+#kubectl get secret --all-namespaces
+
+kubectl create secret docker-registry nexusk8 --docker-server=http://54.189.195.210:30092 --docker-username=admin --docker-password=admin123 --docker-email=admin@example.org
+ImP commands
+
+add lable to node
+-kubectl label nodes node_name key1=val1
+Delete lable from node
+-kubectl label node <nodename> <labelname>- 
+Show lables
+-kubectl get nodes --show-labels
+-kubectl describe nodes
+-kubectl get nodes
+Force POD delete
+ kubectl delete pod webnfs1-945d9fb96-gjrx5 --grace-period=0 --force
+
+SSH to POD
+-kubectl exec -it efs-provisioner-7745cd9fc9-mfldf bash
+
+kubectl exec -it web -n test-namespace bash
+
+Get POD information 
+-kubectl -n test-namespace get pods
+
+get pods from all namesspace
+-kubectl get pods --all-namespaces
+
+get service from all namespace
+-kubectl get svc --all-namespaces
+Logs cheking
+-sudo journalctl -u kubelet".
+
+ssh -i vin.pem ubuntu@52.42.219.183
+ -Master
+ssh -i vin.pem ubuntu@52.39.116. -node1
+ssh -i vin.pem ubuntu@18.236.160.47
+  -node2
+
+
+kubectl create configmap efs-provisioner \
+--from-literal=file.system.id=fs-4fb9e2e7 \
+--from-literal=aws.region=us-us-west-2 \
+--from-literal=provisioner.name=mycompany.com/aws-efs
+
+kubectl create secret generic aws-credentials \
+--from-literal=aws-access-key-id=AKIAIY7X5DS25X2JMP3Q \
+--from-literal=aws-secret-access-key=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
+
+
+
+k8 on wipro account
+
+space
+[addons] Applied essential addon: CoreDNS
+[addons] Applied essential addon: kube-proxy
+
+Your Kubernetes master has initialized successfully!
+
+To start using your cluster, you need to run the following as a regular user:
+
+  mkdir -p $HOME/.kube
+  sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+  sudo chown $(id -u):$(id -g) $HOME/.kube/config
+  export KUBECONFIG=$HOME/admin.conf
+
+
+sudo cp /etc/kubernetes/admin.conf $HOME/
+sudo chown $(id -u):$(id -g) $HOME/admin.conf
+export KUBECONFIG=$HOME/admin.conf
+
+You should now deploy a pod network to the cluster.
+Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
+  https://kubernetes.io/docs/concepts/cluster-administration/addons/
+
+You can now join any number of machines by running the following on each node
+as root:
+
+  kubeadm join 10.235.112.23:6443 --token bm90ea.rhc525l1xrp8otkg --discovery-to      
+
+
+eyJhbGciOiJSUzI1NiIsImtpZCI6IiJ9.eyJpc3MiOiJrdWJlcm5ldGVzL3NlcnZpY2VhY2NvdW50Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9uYW1lc3BhY2UiOiJkZWZhdWx0Iiwia3ViZXJuZXRlcy5pby9zZXJ2aWNlYWNjb3VudC9zZWNyZXQubmFtZSI6ImRhc2hib2FyZC10b2tlbi00cW04aCIsImt1YmVybmV0ZXMuaW8vc2VydmljZWFjY291bnQvc2VydmljZS1hY2NvdW50Lm5hbWUiOiJkYXNoYm9hcmQiLCJrdWJlcm5ldGVzLmlvL3NlcnZpY2VhY2NvdW50L3NlcnZpY2UtYWNjb3VudC51aWQiOiJhZDkyZTY2My0zYTVlLTExZTktOTUzZi0wMDBkM2FhMGE2MDAiLCJzdWIiOiJzeXN0ZW06c2VydmljZWFjY291bnQ6ZGVmYXVsdDpkYXNoYm9hcmQifQ.FT-O-80WrlAqvGzMvjLKV3zYnXBwMRXQLV4_2VEqKAzWhn82gFVdNQUTIe_oA7aOm-0S_CneP0amiZyCrs-_qkroc_fOOJ__rxxQ2cVmy9uJHikZDDGiSDgGKM2KwRYmuLL00eVPB-KLPwIL6g4hcSBWvvZKz2CQHBtEhwGg0Nmx17avqT9Jg4-Y2sIqx-OvSaxAkY9g3svImHwYXShe27ZHNu3sDUjWLOZfhv5tedNpStB0a2ZxNq13dnz6VmxnUVSO7XGnjTuTnKKTkVrEqT-U-sneEKOzURJDuMl7FJRnGUtlc5biFbwqfIcDJIEUYjkn0EyeszTXs1BVcgBEbw                                                                                  ken-ca-cert-hash sha256:827f20b6a9d6028bfa174bf7f1d955a30e199a8fe652036788d64acb                                                                                        e62c75d4
+
+
+
+
+
+
+
+
+
+
+
+

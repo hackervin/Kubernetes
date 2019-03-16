@@ -1,0 +1,248 @@
+version: "3.7"
+services:
+  mongodb:
+    image: 172.31.43.228:30092/mongo-lease
+    container_name: mongodb
+    restart: always
+    ports:
+      - "8101:27017"
+    volumes:
+      - "/Data/hps/mongo_data:/data/db"
+  rabbitmq:
+    image: 172.31.43.228:30092/rabbitmq
+    container_name: rabbitmq
+    ports:
+      - "8098:5672"
+      - "8099:15672"
+    restart: always
+  user-management:
+    image: 172.31.43.228:30092/lae-user-management
+    container_name: user-management
+    ports:
+     - "8021:8021"
+    restart: always
+    environment:
+      - allowed_origins=http://ec2-54-189-195-210.us-west-2.compute.amazonaws.com:4200,http://10.210.17.158:8011,http://ec2-54-189-195-210.us-west-2.compute.amazonaws.com:8011,http://localhost:4200
+      - ldap_domain_name=wipro.com
+      - enable_ldap=false
+      - ldap_url=ldap://blr-ec-dc04.wipro.com:389/
+    extra_hosts:
+     - "pne-hjn-dc05.wipro.com:10.113.50.100"
+     - "blr-ec-dc04.wipro.com:10.201.50.100"
+  ui:
+    image: 172.31.43.228:30092/lae-ui
+    container_name: ui
+    ports:
+     - "4200:4200"
+    restart: always
+  admin-attributes:
+    image: 172.31.43.228:30092/admin-attributes
+    container_name: admin-attributes
+    ports:
+     - "8080:8080"
+    restart: always
+  document_type_identifier:
+    image: 172.31.43.228:30092/erm_document_type_identifier
+    container_name: document_type_identifier
+    ports:
+      - "8091:8895"
+    restart: always
+  pdf2html-erm:
+    image: 172.31.43.228:30092/erm_pdf2html
+    container_name: pdf2html
+    ports:
+      - "8087:5001"
+    depends_on:
+      - data-extractor-erm
+    volumes:
+      - "/Data/LAE/lae_data:/erm/uploads"
+    restart: always
+  data-extractor-erm:
+    image: 172.31.43.228:30092/data-extractor-erm
+    container_name: data-extractor
+    ports:
+      - "3334:3334"
+    volumes:
+      - "/Data/LAE/lae_data:/usr/src/myapp/uploads"
+    restart: always
+  document-alignment:
+    image: 172.31.43.228:30092/erm_document_alignment
+    container_name: document-alignment
+    ports:
+      - "8077:8885"
+    restart: always
+  lease-attributes-extractor:
+    image: 172.31.43.228:30092/atnt_lease_attributes_extractor
+    container_name: lease-attributes-extractor
+    ports:
+      - "8085:8005"
+    restart: always
+  source-extractor-service:
+    image: 172.31.43.228:30092/lae-source-extractor
+    container_name: source-extractor-service
+    ports:
+      - "8082:8082"
+    volumes:
+      - "/Data/LAE/source:/SOURCE"
+    restart: always
+  uploader-service:
+    image: 172.31.43.228:30092/lae-uploader
+    container_name: uploader-service
+    ports:
+      - "8084:8080"
+    volumes:
+      - "/Data/LAE/source:/SOURCE"
+    depends_on:
+      - admin-attributes
+    restart: always
+  batch-scheduler:
+    image: 172.31.43.228:30092/lae-batch-scheduler
+    container_name: batch-scheduler
+    ports:
+      - "8083:9091"
+    restart: always
+    depends_on:
+      - admin-attributes
+      - web-socket-provider
+  digitize-service:
+    image: 172.31.43.228:30092/lae-digitize
+    container_name: digitize-service
+    ports:
+      - "8086:8080"
+    depends_on:
+      - batch-scheduler
+    restart: always
+  dashboard-lease-extraction:
+    image: 172.31.43.228:30092/lae-dashboard-lease-extraction
+    container_name: dashboard-lease-extraction
+    ports:
+      - "8088:8080"
+    restart: always
+  file-renderer:
+    image: 172.31.43.228:30092/lae-file-renderer
+    container_name: file-renderer
+    ports:
+     - "8089:9094"
+    depends_on:
+     - source-extractor-service
+     - admin-attributes
+    restart: always
+  analyst-review:
+    image: 172.31.43.228:30092/lae-analyst-review
+    container_name: analyst-review
+    ports:
+     - "8092:8080"
+    depends_on:
+     - admin-attributes
+    restart: always
+  digitizer-worker:
+    image: 172.31.43.228:30092/lae-digitizer-worker
+    container_name: digitizer-worker
+    ports:
+     - "8093:9092"
+    depends_on:
+     - document-alignment
+     - admin-attributes
+     - data-extractor-erm
+     - pdf2html-erm
+     - lease-attributes-extractor
+     - document_type_identifier
+     - rules-validator
+     - web-socket-provider
+    volumes:
+     - "/Data/LAE/html:/DigitizerWorker/html"
+    restart: always
+  rules-validator:
+    image: 172.31.43.228:30092/lae-rules-validator
+    container_name: rules-validator
+    ports:
+     - "8094:8083"
+    restart: always
+  qc-allocator:
+    image: 172.31.43.228:30092/lae-qc-allocator
+    container_name: qc-allocator
+    ports:
+     - "8095:8083"
+    depends_on:
+     - admin-attributes
+    restart: always
+  web-socket-provider:
+    image: 172.31.43.228:30092/lae-web-socket-provider
+    container_name: web-socket-provider
+    ports:
+      - "8096:8012"
+    restart: always
+  admin-attribute-controller:
+    image: 172.31.43.228:30092/lae-admin-attribute-controller
+    container_name: admin-attribute-controller
+    ports:
+      - "8090:8080"
+    restart: always
+  common-usermanagement:
+    image: 172.31.43.228:30092/commonusermanagement
+    container_name: common-usermanagement
+    ports:
+      - "8022:8031"
+    restart: always
+    extra_hosts:
+     - "pne-hjn-dc05.wipro.com:10.113.50.100"
+  report-generator:
+    image: 172.31.43.228:30092/lae-report-generator
+    container_name: report-generator
+    ports:
+      - "8023:8080"
+    restart: always
+    volumes:
+      - "/Data/LAE/lease_ref:/LAE/ref"
+      - "/Data/LAE/excelConfig:/LAE/excelConfig/"
+  computational-rules:
+    image: 172.31.43.228:30092/lae-computational-rules
+    container_name: computational-rules
+    ports:
+      - "8065:8084"
+    restart: always
+  adapter:
+    image: 172.31.43.228:30092/lae-adapter
+    container_name: adapter
+    ports:
+      - "8066:8087"
+    restart: always
+  dl-attribute-extractor:
+    image: 172.31.43.228:30092/lae-dl-attribute-extractor
+    container_name: dl-attribute-extractor
+    ports:
+      - "8067:8020"
+    restart: always
+
+  sftp-server:
+    image: atmoz/sftp:alpine-3.7
+    volumes:
+      - "/Data/LAE/:/home/foo/"
+    ports:
+      - "2222:22"
+    command: foo:pass:1001
+    restart: always
+
+  db-ui:
+    image: mongo-express
+    links:
+      - mongodb
+    environment:
+      - ME_CONFIG_BASICAUTH_USERNAME=admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=admin123
+      - ME_CONFIG_OPTIONS_EDITORTHEME=ambiance
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+    ports:
+        - "8031:8081"
+    depends_on:
+      - mongodb
+
+  portainer:
+    image: portainer/portainer
+    ports:
+      - "8097:9000"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+      - "/Data/Docker_Doc/portainer_data:/data"
+    restart: always

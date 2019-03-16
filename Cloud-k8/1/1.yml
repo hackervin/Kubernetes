@@ -1,0 +1,25 @@
+version: "3"
+services:
+ web:
+  image: 'gitlab/gitlab-ce:latest'
+  restart: always
+  hostname: 'gitlab.example.com'
+  environment:
+    GITLAB_OMNIBUS_CONFIG: |
+      external_url 'http://108.239.239.35.bc.googleusercontent.com'
+  ports:
+    - '50000:80'
+  volumes:
+    - '/mnt/gitdata/config:/etc/gitlab'
+    - '/mnt/gitdata/logs:/var/log/gitlab'
+    - '/mnt/gitdata/data:/var/opt/gitlab'
+ nexus:
+    image: sonatype/nexus3
+    volumes:
+      - "/mnt/nexusdataa:/nexus-data"
+    ports:
+      - "8081:8081"
+      - "8083:8083"
+      - "8084:8084"
+      - "8085:8085"
+    restart: always

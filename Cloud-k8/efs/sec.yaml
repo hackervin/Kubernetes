@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-credentials
+type: Opaque
+data:
+  # $ echo -n "AKIAIOSFODNN7EXAMPLE" | base64
+  aws-access-key-id: AKIAIY7X5DS25X2JMP3Q
+  # $ echo -n "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" | base64
+  aws-secret-access-key: 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

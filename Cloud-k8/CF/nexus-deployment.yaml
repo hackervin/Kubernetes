@@ -1,0 +1,33 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: nexus
+  name: nexus
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: nexus
+    spec:
+      containers:
+      - image: sonatype/nexus3
+        name: nexus
+        ports:
+        - name: ui
+          containerPort: 8081
+        - name: pv
+          containerPort: 8083
+        - name: proxy
+          containerPort: 8084
+        volumeMounts:
+        - name: nexus-pvc
+          mountPath: /nexus-data
+      volumes:
+      - name: nexus-pvc
+        persistentVolumeClaim:
+          claimName: nexus

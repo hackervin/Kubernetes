@@ -1,0 +1,38 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose -f 1.yml convert
+    kompose.version: 1.17.0 (a74acad)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: nexus
+  name: nexus
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        io.kompose.service: nexus
+    spec:
+      containers:
+      - image: sonatype/nexus3
+        name: nexus
+        ports:
+        - containerPort: 8081
+        - containerPort: 8083
+        - containerPort: 8084
+        - containerPort: 8085
+        resources: {}
+        volumeMounts:
+        - mountPath: /nexus-data
+          name: nexus-claim0
+      restartPolicy: Always
+      volumes:
+      - name: nexus-claim0
+        persistentVolumeClaim:
+          claimName: nexus-claim0
+status: {}
