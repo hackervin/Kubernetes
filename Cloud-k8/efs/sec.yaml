@@ -4,7 +4,7 @@ metadata:
   name: aws-credentials
 type: Opaque
 data:
-  # $ echo -n "AKIAIOSFODNN7EXAMPLE" | base64
+  # $ echo -n "AKIAIOAFBVCAFGVCAFGCA" | base64
   aws-access-key-id: XXXXXXXXXXXXXXXXXXXXXXXXXX
-  # $ echo -n "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" | base64
+  # $ echo -n "wJalrXUtnFEMI/K7MDENG/bAHAGHAGHAG=" | base64
   aws-secret-access-key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
