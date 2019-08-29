@@ -4,8 +4,8 @@ kind: ConfigMap
 metadata:
   name: efs-provisioner
 data:
-  file.system.id: fs-4fb9e2e7
-  aws.region: us-west-2
+  file.system.id: XXXXXXXXXXXX
+  aws.region: XXXXXXXXXXX
   provisioner.name: example.com/aws-efs
   dns.name: ""
 ---
@@ -16,7 +16,7 @@ metadata:
 spec:
   replicas: 1
   strategy:
-    type: Recreate 
+    type: Recreate
   template:
     metadata:
       labels:
@@ -53,7 +53,7 @@ spec:
       volumes:
         - name: pv-volume
           nfs:
-            server: fs-4fb9e2e7.efs.us-west-2.amazonaws.com
+            server: XXXXXX.efs.us-XXXXXX.amazonaws.com
             path: /
 ---
 kind: StorageClass
@@ -65,7 +65,7 @@ provisioner: example.com/aws-efs
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: efs
+  name: aws-efs
   annotations:
     volume.beta.kubernetes.io/storage-class: "aws-efs"
 spec:
@@ -74,4 +74,3 @@ spec:
   resources:
     requests:
       storage: 50Gi
----
