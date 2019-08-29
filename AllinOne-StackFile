@@ -1,0 +1,1861 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ci
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "aws-efs"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ci-1
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "aws-efs"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ci-2
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "aws-efs"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ci-3
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "aws-efs"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ci-4
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "aws-efs"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: ci-5
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "aws-efs"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: classifierreviewer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: classifierreviewer
+    spec:
+      containers:
+      - name: classifierreviewer
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-classifierreviewer
+        volumeMounts:
+        - name: ci
+          mountPath: /dc/logs/ClassifierReviewer
+          subPath: ClassifierReviewer
+        - name: ci-1
+          mountPath: /inbound
+          subPath: GA-DC/input
+        - name: ci-2
+          mountPath: /upload
+          subPath: GA-DC/input
+        - name: ci-3
+          mountPath: /outbound
+          subPath: GA-DC/classifierreviewer-output
+        - name: ci-4
+          mountPath: /uploads
+          subPath: GA-DC/dc_data
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+      volumes:
+      - name: ci
+        persistentVolumeClaim:
+           claimName: ci
+      - name: ci-1
+        persistentVolumeClaim:
+           claimName: ci-1
+      - name: ci-2
+        persistentVolumeClaim:
+           claimName: ci-2
+      - name: ci-3
+        persistentVolumeClaim:
+           claimName: ci-3
+      - name: ci-4
+        persistentVolumeClaim:
+           claimName: ci-4
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: classifierreviewer
+spec:
+  selector:
+    app: classifierreviewer
+  ports:
+    - port: 8086 # Default port for image
+      targetPort: 8086
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: analyst-page-ui
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: analyst-page-ui
+    spec:
+      containers:
+      - name: analyst-page-ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-app-config-analyst-page-ui
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: analyst-page-ui
+spec:
+  selector:
+    app: analyst-page-ui
+  ports:
+    - port: 4200 # Default port for image
+      targetPort: 4200
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: analyst-review
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: analyst-review
+    spec:
+      containers:
+      - name: analyst-review
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-proc-analyst-review
+        volumeMounts:
+        - name: ci
+          mountPath: /documentProcessing/docs
+          subPath: documentProcessing/docs
+      volumes:
+      - name: ci
+        persistentVolumeClaim:
+           claimName: ci
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: analyst-review
+spec:
+  selector:
+    app: analyst-review
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: business-ops-exception-dashboard
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: business-ops-exception-dashboard
+    spec:
+      containers:
+      - name: business-ops-exception-dashboard
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:business-ops-exception-dashboard
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: business-ops-exception-dashboard
+spec:
+  selector:
+    app: business-ops-exception-dashboard
+  ports:
+    - port: 4200 # Default port for image
+      targetPort: 4200
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cac-dockprocess-ui
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cac-dockprocess-ui
+    spec:
+      containers:
+      - name: cac-dockprocess-ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:cac_dockprocess_ui
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: cac-dockprocess-ui
+spec:
+  selector:
+    app: cac-dockprocess-ui
+  ports:
+    - port: 8083 # Default port for image
+      targetPort: 8083
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ci-v2-doc-classifier-ui-ga-angular7
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ci-v2-doc-classifier-ui-ga-angular7
+    spec:
+      containers:
+      - name: ci-v2-doc-classifier-ui-ga-angular7
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-ui-ga-angular7
+        volumeMounts:
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+        - name: ci-4
+          mountPath: /usr/share/nginx/html/resources
+          subPath: GA-DC/DCOutput
+      volumes:
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+      - name: ci-4
+        persistentVolumeClaim:
+           claimName: ci-4
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ci-v2-doc-classifier-ui-ga-angular7
+spec:
+  selector:
+    app: ci-v2-doc-classifier-ui-ga-angular7
+  ports:
+    - port: 4200 # Default port for image
+      targetPort: 4200
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ci-v2-document-processing-ui-dataopslease-angular7
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ci-v2-document-processing-ui-dataopslease-angular7
+    spec:
+      containers:
+      - name: ci-v2-document-processing-ui-dataopslease-angular7
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-document-processing-ui-dataopslease-angular7
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ci-v2-document-processing-ui-dataopslease-angular7
+spec:
+  selector:
+    app: ci-v2-document-processing-ui-dataopslease-angular7
+  ports:
+    - port: 4200 # Default port for image
+      targetPort: 4200
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: classifieroutputlistener
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: classifieroutputlistener
+    spec:
+      containers:
+      - name: classifieroutputlistener
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-classifieroutputlistener
+        volumeMounts:
+        - name: ci-2
+          mountPath: /upload
+          subPath: GA-DC/input
+      volumes:
+      - name: ci-2
+        persistentVolumeClaim:
+           claimName: ci-2
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: classifieroutputlistener
+spec:
+  selector:
+    app: classifieroutputlistener
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: cognitive-adapter
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cognitive-adapter
+    spec:
+      containers:
+      - name: cognitive-adapter
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:cognitive-adapter
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: cognitive-adapter
+spec:
+  selector:
+    app: cognitive-adapter
+  ports:
+    - port: 8086 # Default port for image
+      targetPort: 8086
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: config-db
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "aws-efs"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: config-db
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: config-db
+    spec:
+      containers:
+      - name: config-db
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:mongo
+        volumeMounts:
+        - name: config-db
+          mountPath: /data/db
+          subPath: config-db
+      volumes:
+      - name: config-db
+        persistentVolumeClaim:
+           claimName: config-db
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: config-db
+spec:
+  selector:
+    app: config-db
+  ports:
+    - port: 27017 # Default port for image
+      targetPort: 27017
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: configuration-details
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: configuration-details
+    spec:
+      containers:
+      - name: configuration-details
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:v3-configuration-details
+        volumeMounts:
+        - name: ci
+          mountPath: /GA
+          subPath: GAV3-DC
+      volumes:
+      - name: ci
+        persistentVolumeClaim:
+           claimName: ci
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: configuration-details
+spec:
+  selector:
+    app: configuration-details
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: corelogic-analyst-review
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: corelogic-analyst-review
+    spec:
+      containers:
+      - name: corelogic-analyst-review
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-analyst-review
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: corelogic-analyst-review
+spec:
+  selector:
+    app: corelogic-analyst-review
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: corelogic-cognitiveadapter
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: corelogic-cognitiveadapter
+    spec:
+      containers:
+      - name: corelogic-cognitiveadapter
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-cognitiveadapter
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: corelogic-cognitiveadapter
+spec:
+  selector:
+    app: corelogic-cognitiveadapter
+  ports:
+    - port: 8086 # Default port for image
+      targetPort: 8086
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: corelogic-dl-attr
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: corelogic-dl-attr
+    spec:
+      containers:
+      - name: corelogic-dl-attr
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-dl-attr
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: corelogic-dl-attr
+spec:
+  selector:
+    app: corelogic-dl-attr
+  ports:
+    - port: 8020 # Default port for image
+      targetPort: 8020
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: corelogic-extractor
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: corelogic-extractor
+    spec:
+      containers:
+      - name: corelogic-extractor
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-extractor
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: corelogic-extractor
+spec:
+  selector:
+    app: corelogic-extractor
+  ports:
+    - port: 8005 # Default port for image
+      targetPort: 8005
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: corelogic-extractor-ak-substitution
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: corelogic-extractor-ak-substitution
+    spec:
+      containers:
+      - name: corelogic-extractor-ak-substitution
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-extractor-ak-substitution
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: corelogic-extractor-ak-substitution
+spec:
+  selector:
+    app: corelogic-extractor-ak-substitution
+  ports:
+    - port: 8005 # Default port for image
+      targetPort: 8005
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: corelogic-extractor-hk-dev
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: corelogic-extractor-hk-dev
+    spec:
+      containers:
+      - name: corelogic-extractor-hk-dev
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-extractor-hk-dev
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: corelogic-extractor-hk-dev
+spec:
+  selector:
+    app: corelogic-extractor-hk-dev
+  ports:
+    - port: 8005 # Default port for image
+      targetPort: 8005
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: corelogic-extractor-ok-mortgage
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: corelogic-extractor-ok-mortgage
+    spec:
+      containers:
+      - name: corelogic-extractor-ok-mortgage
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-extractor-ok-mortgage
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: corelogic-extractor-ok-mortgage
+spec:
+  selector:
+    app: corelogic-extractor-ok-mortgage
+  ports:
+    - port: 8005 # Default port for image
+      targetPort: 8005
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: data-extractor-erm
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: data-extractor-erm
+    spec:
+      containers:
+      - name: data-extractor-erm
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:data-extractor-erm
+        volumeMounts:
+        - name: ci-4
+          mountPath: /usr/src/myapp/uploads
+          subPath: GA-DC/dc_data
+      volumes:
+      - name: ci-4
+        persistentVolumeClaim:
+           claimName: ci-4
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: data-extractor-erm
+spec:
+  selector:
+    app: data-extractor-erm
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: data-ops-adapter-service
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: data-ops-adapter-service
+    spec:
+      containers:
+      - name: data-ops-adapter-service
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-data-ops-adapter-service
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: data-ops-adapter-service
+spec:
+  selector:
+    app: data-ops-adapter-service
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: data-ops-review-allocator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: data-ops-review-allocator
+    spec:
+      containers:
+      - name: data-ops-review-allocator
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-data-ops-review-allocator
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: data-ops-review-allocator
+spec:
+  selector:
+    app: data-ops-review-allocator
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: data-ops-review-service
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: data-ops-review-service
+    spec:
+      containers:
+      - name: data-ops-review-service
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-data-ops-review-service
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: data-ops-review-service
+spec:
+  selector:
+    app: data-ops-review-service
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: data-ops-rules-validator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: data-ops-rules-validator
+    spec:
+      containers:
+      - name: data-ops-rules-validator
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-data-ops-rules-validator
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: data-ops-rules-validator
+spec:
+  selector:
+    app: data-ops-rules-validator
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dev-memo-tx-corelogic-extractor
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dev-memo-tx-corelogic-extractor
+    spec:
+      containers:
+      - name: dev-memo-tx-corelogic-extractor
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:dev-memo-tx-corelogic-extractor
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dev-memo-tx-corelogic-extractor
+spec:
+  selector:
+    app: dev-memo-tx-corelogic-extractor
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: digitize-service
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: digitize-service
+    spec:
+      containers:
+      - name: digitize-service
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-proc-digitize-service
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: digitize-service
+spec:
+  selector:
+    app: digitize-service
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: digitized-db
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "aws-efs"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: digitized-db
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: digitized-db
+    spec:
+      containers:
+      - name: digitized-db
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:mongo
+        volumeMounts:
+        - name: digitized-db
+          mountPath: /data/db
+          subPath: digitized-db
+      volumes:
+      - name: digitized-db
+        persistentVolumeClaim:
+           claimName: digitized-db
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: digitized-db
+spec:
+  selector:
+    app: digitized-db
+  ports:
+    - port: 27017 # Default port for image
+      targetPort: 27017
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: dl-attribute-extractor
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dl-attribute-extractor
+    spec:
+      containers:
+      - name: dl-attribute-extractor
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:lae-dl-attribute-extractor
+      imagePullSecrets:
+      - name: aws-registry
+
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: dl-attribute-extractor
+spec:
+  selector:
+    app: dl-attribute-extractor
+  ports:
+    - port: 8020 # Default port for image
+      targetPort: 8020
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: doc-classfier-ui
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: doc-classfier-ui
+    spec:
+      containers:
+      - name: doc-classfier-ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:mongo
+        volumeMounts:
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+        - name: ci-4
+          mountPath: /usr/share/nginx/html/resources
+          subPath: GA-DC/DCOutput
+      volumes:
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+      - name: ci-4
+        persistentVolumeClaim:
+           claimName: ci-4
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: doc-classfier-ui
+spec:
+  selector:
+    app: doc-classfier-ui
+  ports:
+    - port: 4200 # Default port for image
+      targetPort: 4200
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: doc-proc-lease-attri-extractor
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: doc-proc-lease-attri-extractor
+    spec:
+      containers:
+      - name: doc-proc-lease-attri-extractor
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-ui
+        volumeMounts:
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+        - name: ci-3
+          mountPath: /outbound
+          subPath: GA-DC/classifierreviewer-output
+      volumes:
+      - name: ci-3
+        persistentVolumeClaim:
+           claimName: ci-3
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: doc-proc-lease-attri-extractor
+spec:
+  selector:
+    app: doc-proc-lease-attri-extractor
+  ports:
+    - port: 8005 # Default port for image
+      targetPort: 8005
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: doc-processing-ui
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: doc-processing-ui
+    spec:
+      containers:
+      - name: doc-processing-ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-processing-ui
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: doc-processing-ui
+spec:
+  selector:
+    app: doc-processing-ui
+  ports:
+    - port: 4200 # Default port for image
+      targetPort: 4200
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: docket-queue
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: docket-queue
+    spec:
+      containers:
+      - name: docket-queue
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-docket-queue
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: docket-queue
+spec:
+  selector:
+    app: docket-queue
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: document-alignment
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: document-alignment
+    spec:
+      containers:
+      - name: document-alignment
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:erm-document-alignment
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: document-alignment
+spec:
+  selector:
+    app: document-alignment
+  ports:
+    - port: 8885 # Default port for image
+      targetPort: 8885
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: document-type-identifier
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: document-type-identifier
+    spec:
+      containers:
+      - name: document-type-identifier
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-document-type-identifier
+        volumeMounts:
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+      volumes:
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: document-type-identifier
+spec:
+  selector:
+    app: document-type-identifier
+  ports:
+    - port: 8895 # Default port for image
+      targetPort: 8895
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: file-renderer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: file-renderer
+    spec:
+      containers:
+      - name: file-renderer
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-proc-file-renderer
+        volumeMounts:
+        - name: ci-3
+          mountPath: /outbound
+          subPath: GA-DC/classifierreviewer-output
+        - name: ci-2
+          mountPath: /upload
+          subPath: GA-DC/input
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+      volumes:
+      - name: ci-2
+        persistentVolumeClaim:
+           claimName: ci-2
+      - name: ci-3
+        persistentVolumeClaim:
+           claimName: ci-3
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: file-renderer
+spec:
+  selector:
+    app: file-renderer
+  ports:
+    - port: 8065 # Default port for image
+      targetPort: 8065
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: file-server
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: file-server
+    spec:
+      containers:
+      - name: file-server
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-file-server
+        volumeMounts:
+        - name: ci-2
+          mountPath: /app/upload
+          subPath: GA-DC/input
+      volumes:
+      - name: ci-2
+        persistentVolumeClaim:
+           claimName: ci-2
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: file-server
+spec:
+  selector:
+    app: file-server
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: law-attr-extract
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: law-attr-extract
+    spec:
+      containers:
+      - name: law-attr-extract
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:contract-review-law-attr-extract
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: law-attr-extract
+spec:
+  selector:
+    app: law-attr-extract
+  ports:
+    - port: 8020 # Default port for image
+      targetPort: 8020
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: mongo-db
+  annotations:
+    volume.beta.kubernetes.io/storage-class: "aws-efs"
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mongo-db
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mongo-db
+    spec:
+      containers:
+      - name: mongo-db
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:mongo
+        volumeMounts:
+        - name: mongo-db
+          mountPath: /data/db
+          subPath: mongo-db
+      volumes:
+      - name: mongo-db
+        persistentVolumeClaim:
+           claimName: mongo-db
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: mongo-db
+spec:
+  selector:
+    app: mongo-db
+  ports:
+    - port: 27017 # Default port for image
+      targetPort: 27017
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: orch-attr-extractor
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: orch-attr-extractor
+    spec:
+      containers:
+      - name: orch-attr-extractor
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:orch-attr-extractor
+        volumeMounts:
+        - name: ci-3
+          mountPath: /outbound
+          subPath: GA-DC/classifierreviewer-output
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+      volumes:
+      - name: ci-3
+        persistentVolumeClaim:
+           claimName: ci-3
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: orch-attr-extractor
+spec:
+  selector:
+    app: orch-attr-extractor
+  ports:
+    - port: 5001 # Default port for image
+      targetPort: 5001
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: pdf-bookmarking-service
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pdf-bookmarking-service
+    spec:
+      containers:
+      - name: pdf-bookmarking-service
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-pdf-bookmarking
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: pdf-bookmarking-service
+spec:
+  selector:
+    app: pdf-bookmarking-service
+  ports:
+    - port: 8083 # Default port for image
+      targetPort: 8083
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: pdf2html-erm
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pdf2html-erm
+    spec:
+      containers:
+      - name: pdf2html-erm
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:doc-classifier-pdf2html
+        volumeMounts:
+        - name: ci-4
+          mountPath: /erm/uploads
+          subPath: GA-DC/dc_data
+        - name: ci-2
+          mountPath: /erm/upload
+          subPath: GA-DC/input
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+      volumes:
+      - name: ci-4
+        persistentVolumeClaim:
+           claimName: ci-4
+      - name: ci-2
+        persistentVolumeClaim:
+           claimName: ci-2
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: pdf2html-erm
+spec:
+  selector:
+    app: pdf2html-erm
+  ports:
+    - port: 5001 # Default port for image
+      targetPort: 5001
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: pdf2html-erm-1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pdf2html-erm-1
+    spec:
+      containers:
+      - name: pdf2html-erm-1
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:erm_pdf2html
+        volumeMounts:
+        - name: ci-4
+          mountPath: /erm/uploads
+          subPath: GA-DC/dc_data
+      volumes:
+      - name: ci-4
+        persistentVolumeClaim:
+           claimName: ci-4
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: pdf2html-erm-1
+spec:
+  selector:
+    app: pdf2html-erm-1
+  ports:
+    - port: 5001 # Default port for image
+      targetPort: 5001
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: portal-dao
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: portal-dao
+    spec:
+      containers:
+      - name: portal-dao
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:v3-portal-dao
+        volumeMounts:
+        - name: ci
+          mountPath: /GA/excelConfig
+          subPath: GAV3-DC/excelConfig
+      volumes:
+      - name: ci
+        persistentVolumeClaim:
+           claimName: ci
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: portal-dao
+spec:
+  selector:
+    app: portal-dao
+  ports:
+    - port: 8022 # Default port for image
+      targetPort: 8022
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: portal-training-initiator
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: portal-training-initiator
+    spec:
+      containers:
+      - name: portal-training-initiator
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:v3-portal-training-initiator
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: portal-training-initiator
+spec:
+  selector:
+    app: portal-training-initiator
+  ports:
+    - port: 8020 # Default port for image
+      targetPort: 8020
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: portalv3-dl-attribute-extractor
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: portalv3-dl-attribute-extractor
+    spec:
+      containers:
+      - name: portalv3-dl-attribute-extractor
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:portalv3-dl-attribute-extractor
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: portalv3-dl-attribute-extractor
+spec:
+  selector:
+    app: portalv3-dl-attribute-extractor
+  ports:
+    - port: 8020 # Default port for image
+      targetPort: 8020
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: portalv3-document-type-identifier
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: portalv3-document-type-identifier
+    spec:
+      containers:
+      - name: portalv3-document-type-identifier
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:portalv3-document-type-identifier
+        volumeMounts:
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+      volumes:
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: portalv3-document-type-identifier
+spec:
+  selector:
+    app: portalv3-document-type-identifier
+  ports:
+    - port: 8895 # Default port for image
+      targetPort: 8895
+
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: portalv3-sow-attributes-extractor
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: portalv3-sow-attributes-extractor
+    spec:
+      containers:
+      - name: portalv3-sow-attributes-extractor
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:portalv3-document-type-identifier
+        volumeMounts:
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+        - name: ci-3
+          mountPath: /outbound
+          subPath: GA-DC/classifierreviewer-output
+      volumes:
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+      - name: ci-3
+        persistentVolumeClaim:
+           claimName: ci-3
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: portalv3-document-type-identifier
+spec:
+  selector:
+    app: portalv3-document-type-identifier
+  ports:
+    - port: 8005 # Default port for image
+      targetPort: 8005
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ref-msa-attr
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ref-msa-attr
+    spec:
+      containers:
+      - name: ref-msa-attr
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:msa-attr
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ref-msa-attr
+spec:
+  selector:
+    app: ref-msa-attr
+  ports:
+    - port: 8020 # Default port for image
+      targetPort: 8020
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ref-msa-clause-attr
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ref-msa-clause-attr
+    spec:
+      containers:
+      - name: ref-msa-clause-attr
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-ui
+        volumeMounts:
+        - name: ci-5
+          mountPath: /DCOutput
+          subPath: GA-DC/DCOutput
+
+        - name: ci-4
+          mountPath: /usr/share/nginx/html/resources
+          subPath: GA-DC/DCOutput
+
+      volumes:
+      - name: ci-5
+        persistentVolumeClaim:
+           claimName: ci-5
+
+      - name: ci-4
+        persistentVolumeClaim:
+           claimName: ci-4
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ref-msa-clause-attr
+spec:
+  selector:
+    app: ref-msa-clause-attr
+  ports:
+    - port: 8006 # Default port for image
+      targetPort: 8006
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ref-order-form-attr
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ref-order-form-attr
+    spec:
+      containers:
+      - name: ref-order-form-attr
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:attr-orderform
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ref-order-form-attr
+spec:
+  selector:
+    app: ref-order-form-attr
+  ports:
+    - port: 8020 # Default port for image
+      targetPort: 8020
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: ui
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ui
+    spec:
+      containers:
+      - name: ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-app-config-ui
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: ui
+spec:
+  selector:
+    app: ui
+  ports:
+    - port: 4200 # Default port for image
+      targetPort: 4200
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: user-managemen
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: user-managemen
+    spec:
+      containers:
+      - name: user-managemen
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:v3-portal-user-management
+        env:
+        - name: allowed_origins
+          value: "http://10.235.112.135:4200,http://localhost:4400,http://localhost:4200,http://10.235.112.135:8032,http://localhost:4300,http://10.235.112.135:8011,http://10.235.112.135:8018"
+        - name: content_origins
+          value: "http://10.235.112.135:4200"
+        - name: enable_ldap
+          value: "false"
+        - name: ldap_domain_name
+          value: "wipro.com"
+        - name: ldap_url
+          value: "ldap://pne-hjn-dc05.wipro.com:389/"
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: user-managemen
+spec:
+  selector:
+    app: user-managemen
+  ports:
+    - port: 8021 # Default port for image
+      targetPort: 8021
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: web-socket
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: web-socket
+    spec:
+      containers:
+      - name: web-socket
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-data-ops-web-socket
+      imagePullSecrets:
+      - name: aws-registry
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: web-socket
+spec:
+  selector:
+    app: web-socket
+  ports:
+    - port: 8080 # Default port for image
+      targetPort: 8080
