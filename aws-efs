@@ -4,8 +4,8 @@ kind: ConfigMap
 metadata:
   name: efs-provisioner
 data:
-  file.system.id: fsxxxxxxxx
-  aws.region: us-xxxxxxxxxxx
+  file.system.id: fs-d23cf730
+  aws.region: XXXX-Enter-your-Region-XXXX
   provisioner.name: example.com/aws-efs
   dns.name: ""
 ---
@@ -49,16 +49,16 @@ spec:
                   name: efs-provisioner
                   key: provisioner.name
             - name: AWS_ACCESS_KEY_ID
-              value: XXXXXXXXXXXXXXXXXXXX
+              value: XXXX-Enter-AWS-ID-XXXXX
             - name: AWS_SECRET_ACCESS_KEY
-              value: xxxxxxxxxxxxxxxxxxxxxx
+              value: XXXX-Enter-AWS-ACCESS_KE-XXXXX
           volumeMounts:
             - name: pv-volume
               mountPath: /persistentvolumes
       volumes:
         - name: pv-volume
           nfs:
-            server: xxxxxxxxx.efs.xxxxxxxxxxx.amazonaws.com
+            server: XXXXXXX.efs.XXXXXXX.amazonaws.com  # enter EFS DNS name here 
             path: /
 ---
 kind: StorageClass
@@ -139,14 +139,3 @@ kind: ServiceAccount
 apiVersion: v1
 metadata:
   name: efs-provisioner
-----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: aws-credentials
-type: Opaque
-data:
-  # $ echo -n "xxxxxxxxxxx" | base64
-  aws-access-key-id: xxxxxxxxxxxxx
-  # $ echo -n "wxxxxxxxxxxxxxxxxxxxxxxxxxxx" | base64
-  aws-secret-access-key: xxxxxxxxxxxxxxxxxxxxxxxxxxxx
