@@ -5,6 +5,6 @@ metadata:
 type: Opaque
 data:
   # $ echo -n "AKIAIOSFODNN7EXAMPLE" | base64
-  aws-access-key-id: UR AWS ID
+  aws-access-key-id: XXXXXXXXXXXXXXXXXXXXXXXXXX
   # $ echo -n "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" | base64
-  aws-secret-access-key: UR AWS KEY
+  aws-secret-access-key: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
