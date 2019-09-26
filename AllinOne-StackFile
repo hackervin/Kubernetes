@@ -2,7 +2,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: ci
+  name: commonpipeline
   annotations:
     volume.beta.kubernetes.io/storage-class: "aws-efs"
 spec:
@@ -12,1804 +12,1836 @@ spec:
     requests:
       storage: 1Gi
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: ci-1
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "aws-efs"
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: ci-2
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "aws-efs"
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: ci-3
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "aws-efs"
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: ci-4
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "aws-efs"
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: ci-5
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "aws-efs"
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: classifierreviewer
+  name: adapter-classifier-service
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: adapter-classifier-service
   replicas: 1
   template:
     metadata:
       labels:
-        app: classifierreviewer
+        tier: backend
+        run: adapter-classifier-service
     spec:
       containers:
-      - name: classifierreviewer
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-classifierreviewer
+      - name: adapter-classifier-service
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-adapter-classifier-service
+        imagePullPolicy: Always
         volumeMounts:
-        - name: ci
-          mountPath: /dc/logs/ClassifierReviewer
-          subPath: ClassifierReviewer
-        - name: ci-1
-          mountPath: /inbound
-          subPath: GA-DC/input
-        - name: ci-2
-          mountPath: /upload
-          subPath: GA-DC/input
-        - name: ci-3
-          mountPath: /outbound
-          subPath: GA-DC/classifierreviewer-output
-        - name: ci-4
-          mountPath: /uploads
-          subPath: GA-DC/dc_data
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
       volumes:
-      - name: ci
+      - name: commonpipeline
         persistentVolumeClaim:
-           claimName: ci
-      - name: ci-1
-        persistentVolumeClaim:
-           claimName: ci-1
-      - name: ci-2
-        persistentVolumeClaim:
-           claimName: ci-2
-      - name: ci-3
-        persistentVolumeClaim:
-           claimName: ci-3
-      - name: ci-4
-        persistentVolumeClaim:
-           claimName: ci-4
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
+           claimName: commonpipeline
       imagePullSecrets:
       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: classifierreviewer
+  name: adapter-classifier-service
+  labels:
+    tier: backend
+    run: adapter-classifier-service
 spec:
-  selector:
-    app: classifierreviewer
   ports:
-    - port: 8086 # Default port for image
-      targetPort: 8086
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: adapter-classifier-service
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: analyst-page-ui
+  name: ca-dvs-ui
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: ca-dvs-ui
   replicas: 1
   template:
     metadata:
       labels:
-        app: analyst-page-ui
+        tier: backend
+        run: ca-dvs-ui
     spec:
       containers:
-      - name: analyst-page-ui
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-app-config-analyst-page-ui
+      - name: ca-dvs-ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:ca_dvs_ui
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
+apiVersion: v1
 kind: Service
-apiVersion: v1
 metadata:
-  name: analyst-page-ui
+  name: ca-dvs-ui
+  labels:
+    tier: backend
+    run: ca-dvs-ui
 spec:
-  selector:
-    app: analyst-page-ui
   ports:
-    - port: 4200 # Default port for image
-      targetPort: 4200
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: analyst-review
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: analyst-review
-    spec:
-      containers:
-      - name: analyst-review
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-proc-analyst-review
-        volumeMounts:
-        - name: ci
-          mountPath: /documentProcessing/docs
-          subPath: documentProcessing/docs
-      volumes:
-      - name: ci
-        persistentVolumeClaim:
-           claimName: ci
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: analyst-review
-spec:
+  - port: 4200
+    protocol: TCP
+  type: NodePort
   selector:
-    app: analyst-review
-  ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
+    tier: backend
+    run: ca-dvs-ui
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: business-ops-exception-dashboard
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: business-ops-exception-dashboard
-    spec:
-      containers:
-      - name: business-ops-exception-dashboard
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:business-ops-exception-dashboard
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: business-ops-exception-dashboard
-spec:
-  selector:
-    app: business-ops-exception-dashboard
-  ports:
-    - port: 4200 # Default port for image
-      targetPort: 4200
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: cac-dockprocess-ui
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: cac-dockprocess-ui
-    spec:
-      containers:
-      - name: cac-dockprocess-ui
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:cac_dockprocess_ui
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: cac-dockprocess-ui
-spec:
-  selector:
-    app: cac-dockprocess-ui
-  ports:
-    - port: 8083 # Default port for image
-      targetPort: 8083
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: ci-v2-doc-classifier-ui-ga-angular7
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: ci-v2-doc-classifier-ui-ga-angular7
-    spec:
-      containers:
-      - name: ci-v2-doc-classifier-ui-ga-angular7
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-ui-ga-angular7
-        volumeMounts:
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
-        - name: ci-4
-          mountPath: /usr/share/nginx/html/resources
-          subPath: GA-DC/DCOutput
-      volumes:
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
-      - name: ci-4
-        persistentVolumeClaim:
-           claimName: ci-4
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: ci-v2-doc-classifier-ui-ga-angular7
-spec:
-  selector:
-    app: ci-v2-doc-classifier-ui-ga-angular7
-  ports:
-    - port: 4200 # Default port for image
-      targetPort: 4200
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: ci-v2-document-processing-ui-dataopslease-angular7
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: ci-v2-document-processing-ui-dataopslease-angular7
-    spec:
-      containers:
-      - name: ci-v2-document-processing-ui-dataopslease-angular7
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-document-processing-ui-dataopslease-angular7
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: ci-v2-document-processing-ui-dataopslease-angular7
-spec:
-  selector:
-    app: ci-v2-document-processing-ui-dataopslease-angular7
-  ports:
-    - port: 4200 # Default port for image
-      targetPort: 4200
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: classifieroutputlistener
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: classifieroutputlistener
-    spec:
-      containers:
-      - name: classifieroutputlistener
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-classifieroutputlistener
-        volumeMounts:
-        - name: ci-2
-          mountPath: /upload
-          subPath: GA-DC/input
-      volumes:
-      - name: ci-2
-        persistentVolumeClaim:
-           claimName: ci-2
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: classifieroutputlistener
-spec:
-  selector:
-    app: classifieroutputlistener
-  ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: cognitive-adapter
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: cognitive-adapter
-    spec:
-      containers:
-      - name: cognitive-adapter
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:cognitive-adapter
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: cognitive-adapter
-spec:
-  selector:
-    app: cognitive-adapter
-  ports:
-    - port: 8086 # Default port for image
-      targetPort: 8086
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: config-db
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "aws-efs"
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: config-db
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: config-db
   replicas: 1
   template:
     metadata:
       labels:
-        app: config-db
+        tier: backend
+        run: config-db
     spec:
       containers:
       - name: config-db
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:mongo
+        image: mongo
+        ports:
+        - containerPort: 27017
         volumeMounts:
         - name: config-db
           mountPath: /data/db
-          subPath: config-db
+          subPath: commonpipeline/config-db
       volumes:
-      - name: config-db
-        persistentVolumeClaim:
-           claimName: config-db
+       - name: config-db
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
   name: config-db
+  labels:
+    tier: backend
+    run: config-db
 spec:
-  selector:
-    app: config-db
   ports:
-    - port: 27017 # Default port for image
-      targetPort: 27017
+  - port: 27017
+    protocol: TCP
+  selector:
+    tier: backend
+    run: config-db
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: configuration-details
+  name: configurationdetails
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: configurationdetails
   replicas: 1
   template:
     metadata:
       labels:
-        app: configuration-details
+        tier: backend
+        run: configurationdetails
     spec:
       containers:
-      - name: configuration-details
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:v3-configuration-details
+      - name: configurationdetails
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_dev_configurationdetails
+        imagePullPolicy: Always
+        imagePullPolicy: Always
         volumeMounts:
-        - name: ci
+        - name: commonpipeline
           mountPath: /GA
-          subPath: GAV3-DC
+          subPath: commonpipeline/GAV3-DC
       volumes:
-      - name: ci
-        persistentVolumeClaim:
-           claimName: ci
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: configuration-details
+  name: configurationdetails
+  labels:
+    tier: backend
+    run: configurationdetails
 spec:
-  selector:
-    app: configuration-details
   ports:
-    - port: 8080
-      targetPort: 8080
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: configurationdetails
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: corelogic-analyst-review
+  name: cp-docclassifier-ui
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: cp-docclassifier-ui
   replicas: 1
   template:
     metadata:
       labels:
-        app: corelogic-analyst-review
+        tier: backend
+        run: cp-docclassifier-ui
     spec:
       containers:
-      - name: corelogic-analyst-review
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-analyst-review
+      - name:  cp-docclassifier-ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:cp_docclassifier_ui
+        imagePullPolicy: Always
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
-
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: corelogic-analyst-review
+  name: cp-docclassifier-ui
+  labels:
+    tier: backend
+    run: cp-docclassifier-ui
 spec:
-  selector:
-    app: corelogic-analyst-review
   ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
-
+  - port: 4200
+    protocol: TCP
+  type: NodePort
+  selector:
+    tier: backend
+    run: cp-docclassifier-ui
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: corelogic-cognitiveadapter
+  name: cp-dvs-ui
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: cp-dvs-ui
   replicas: 1
   template:
     metadata:
       labels:
-        app: corelogic-cognitiveadapter
+        tier: backend
+        run: cp-dvs-ui
     spec:
       containers:
-      - name: corelogic-cognitiveadapter
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-cognitiveadapter
+      - name: cp-dvs-ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:cp_dvs_ui
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: corelogic-cognitiveadapter
+  name: cp-dvs-ui
+  labels:
+    tier: backend
+    run: cp-dvs-ui
 spec:
-  selector:
-    app: corelogic-cognitiveadapter
   ports:
-    - port: 8086 # Default port for image
-      targetPort: 8086
+  - port: 8080
+    protocol: TCP
+  type: NodePort
+  selector:
+    tier: backend
+    run: cp-dvs-ui
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: corelogic-dl-attr
+  name: cp-process-statistics-mlops
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: cp-process-statistics-mlops
   replicas: 1
   template:
     metadata:
       labels:
-        app: corelogic-dl-attr
+        tier: backend
+        run: cp-process-statistics-mlops
     spec:
       containers:
-      - name: corelogic-dl-attr
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-dl-attr
+      - name: cp-process-statistics-mlops
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:cp-process-statistics-mlops
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: corelogic-dl-attr
+  name: cp-process-statistics-mlops
+  labels:
+    tier: backend
+    run: cp-process-statistics-mlops
 spec:
-  selector:
-    app: corelogic-dl-attr
   ports:
-    - port: 8020 # Default port for image
-      targetPort: 8020
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: cp-process-statistics-mlops
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: corelogic-extractor
+  name: cp-ui
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: cp-ui
   replicas: 1
   template:
     metadata:
       labels:
-        app: corelogic-extractor
+        tier: backend
+        run: cp-ui
     spec:
       containers:
-      - name: corelogic-extractor
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-extractor
+      - name: cp-ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:cp_ui
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
-
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: corelogic-extractor
+  name: cp-ui
+  labels:
+    tier: backend
+    run: cp-ui
 spec:
-  selector:
-    app: corelogic-extractor
   ports:
-    - port: 8005 # Default port for image
-      targetPort: 8005
+  - port: 4200
+    protocol: TCP
+  type: NodePort
+  selector:
+    tier: backend
+    run: cp-ui
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: corelogic-extractor-ak-substitution
+  name: cp-user-management
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: cp-user-management
   replicas: 1
   template:
     metadata:
       labels:
-        app: corelogic-extractor-ak-substitution
+        tier: backend
+        run: cp-user-management
     spec:
       containers:
-      - name: corelogic-extractor-ak-substitution
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-extractor-ak-substitution
+      - name: cp-user-management
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_dev_usermanagement
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8021
+        env:
+        - name: allowed_origins
+          value: "*"
+        - name: content_origins
+          value: "*"
+        - name: enable_ldap
+          value: "false"
+        - name: ldap_domain_name
+          value: "wipro.com"
+        - name: ldap_url
+          value: "ldap://pne-hjn-dc05.wipro.com:389/"
       imagePullSecrets:
       - name: aws-registry
-
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: corelogic-extractor-ak-substitution
+  name: cp-user-management
+  labels:
+    tier: backend
+    run: cp-user-management
 spec:
-  selector:
-    app: corelogic-extractor-ak-substitution
   ports:
-    - port: 8005 # Default port for image
-      targetPort: 8005
+  - port: 8021
+    protocol: TCP
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: corelogic-extractor-hk-dev
+  name: dashboard-service
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dashboard-service
   replicas: 1
   template:
     metadata:
       labels:
-        app: corelogic-extractor-hk-dev
+        tier: backend
+        run: dashboard-service
     spec:
       containers:
-      - name: corelogic-extractor-hk-dev
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-extractor-hk-dev
+      - name: dashboard-service
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_dashboard-service
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
-
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: corelogic-extractor-hk-dev
+  name: dashboard-service
+  labels:
+    tier: backend
+    run: dashboard-service
 spec:
-  selector:
-    app: corelogic-extractor-hk-dev
   ports:
-    - port: 8005 # Default port for image
-      targetPort: 8005
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dashboard-service
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: corelogic-extractor-ok-mortgage
+  name: dc-form-extraction
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dc-form-extraction
   replicas: 1
   template:
     metadata:
       labels:
-        app: corelogic-extractor-ok-mortgage
+        tier: backend
+        run: dc-form-extraction
     spec:
       containers:
-      - name: corelogic-extractor-ok-mortgage
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:corelogic-extractor-ok-mortgage
-      imagePullSecrets:
-      - name: aws-registry
-
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: corelogic-extractor-ok-mortgage
-spec:
-  selector:
-    app: corelogic-extractor-ok-mortgage
-  ports:
-    - port: 8005 # Default port for image
-      targetPort: 8005
-
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: data-extractor-erm
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: data-extractor-erm
-    spec:
-      containers:
-      - name: data-extractor-erm
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:data-extractor-erm
+      - name: dc-form-extraction
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-dc-form-extraction
+        imagePullPolicy: Always
         volumeMounts:
-        - name: ci-4
-          mountPath: /usr/src/myapp/uploads
-          subPath: GA-DC/dc_data
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
       volumes:
-      - name: ci-4
-        persistentVolumeClaim:
-           claimName: ci-4
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: data-extractor-erm
+  name: dc-form-extraction
+  labels:
+    tier: backend
+    run: dc-form-extraction
 spec:
-  selector:
-    app: data-extractor-erm
   ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dc-form-extraction
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: data-ops-adapter-service
+  name: dcerrorlogging
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dcerrorlogging
   replicas: 1
   template:
     metadata:
       labels:
-        app: data-ops-adapter-service
+        tier: backend
+        run: dcerrorlogging
     spec:
       containers:
-      - name: data-ops-adapter-service
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-data-ops-adapter-service
+      - name: dcerrorlogging
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-dcerrorlogging
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
-
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: data-ops-adapter-service
+  name: dcerrorlogging
+  labels:
+    tier: backend
+    run: dcerrorlogging
 spec:
-  selector:
-    app: data-ops-adapter-service
   ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dcerrorlogging
 ---
-
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: data-ops-review-allocator
+  name: dcfileupload
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dcfileupload
   replicas: 1
   template:
     metadata:
       labels:
-        app: data-ops-review-allocator
+        tier: backend
+        run: dcfileupload
     spec:
       containers:
-      - name: data-ops-review-allocator
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-data-ops-review-allocator
+      - name: dcfileupload
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:cp-dcfileupload
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
-
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: data-ops-review-allocator
+  name: dcfileupload
+  labels:
+    tier: backend
+    run: dcfileupload
 spec:
-  selector:
-    app: data-ops-review-allocator
   ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dcfileupload
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: data-ops-review-service
+  name: dcformsprocessingwrapper
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dcformsprocessingwrapper
   replicas: 1
   template:
     metadata:
       labels:
-        app: data-ops-review-service
+        tier: backend
+        run: dcformsprocessingwrapper
     spec:
       containers:
-      - name: data-ops-review-service
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-data-ops-review-service
+      - name: dcformsprocessingwrapper
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-dcformsprocessingwrapper
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
-
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: data-ops-review-service
+  name: dcformsprocessingwrapper
+  labels:
+    tier: backend
+    run: dcformsprocessingwrapper
 spec:
-  selector:
-    app: data-ops-review-service
   ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dcformsprocessingwrapper
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: data-ops-rules-validator
+  name: dcoperationaldblogging
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dcoperationaldblogging
   replicas: 1
   template:
     metadata:
       labels:
-        app: data-ops-rules-validator
+        tier: backend
+        run: dcoperationaldblogging
     spec:
       containers:
-      - name: data-ops-rules-validator
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-data-ops-rules-validator
+      - name: dcoperationaldblogging
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-dcoperationaldblogging
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
-
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: data-ops-rules-validator
+  name: dcoperationaldblogging
+  labels:
+    tier: backend
+    run: dcoperationaldblogging
 spec:
-  selector:
-    app: data-ops-rules-validator
   ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dcoperationaldblogging
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dev-memo-tx-corelogic-extractor
+  name: dcprocessconvertedfiles
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dcprocessconvertedfiles
   replicas: 1
   template:
     metadata:
       labels:
-        app: dev-memo-tx-corelogic-extractor
+        tier: backend
+        run: dcprocessconvertedfiles
     spec:
       containers:
-      - name: dev-memo-tx-corelogic-extractor
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:dev-memo-tx-corelogic-extractor
+      - name: dcprocessconvertedfiles
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-dcprocessconvertedfiles
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
-
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: dev-memo-tx-corelogic-extractor
+  name: dcprocessconvertedfiles
+  labels:
+    tier: backend
+    run: dcprocessconvertedfiles
 spec:
-  selector:
-    app: dev-memo-tx-corelogic-extractor
   ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dcprocessconvertedfiles
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: digitize-service
+  name: dcprocessftpfiles
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dcprocessftpfiles
   replicas: 1
   template:
     metadata:
       labels:
-        app: digitize-service
+        tier: backend
+        run: dcprocessftpfiles
     spec:
       containers:
-      - name: digitize-service
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-proc-digitize-service
+      - name: dcprocessftpfiles
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-dcprocessftpfiles
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
-
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: digitize-service
+  name: dcprocessftpfiles
+  labels:
+    tier: backend
+    run: dcprocessftpfiles
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dcprocessftpfiles
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcprocesshocrfiles
 spec:
   selector:
-    app: digitize-service
-  ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
+    matchLabels:
+      tier: backend
+      run: dcprocesshocrfiles
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        tier: backend
+        run: dcprocesshocrfiles
+    spec:
+      containers:
+      - name: dcprocesshocrfiles
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-dcprocesshocrfiles
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
+      imagePullSecrets:
+       - name: aws-registry
 ---
-kind: PersistentVolumeClaim
 apiVersion: v1
+kind: Service
+metadata:
+  name: dcprocesshocrfiles
+  labels:
+    run: dcprocesshocrfiles
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dcprocesshocrfiles
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dcstartprocessingdocs
+spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dcstartprocessingdocs
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        tier: backend
+        run: dcstartprocessingdocs
+    spec:
+      containers:
+      - name: dcstartprocessingdocs
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-dcstartprocessingdocs
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
+      imagePullSecrets:
+       - name: aws-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dcstartprocessingdocs
+  labels:
+    tier: backend
+    run: dcstartprocessingdocs
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dcstartprocessingdocs
+---
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: digitized-db
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "aws-efs"
 spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: digitized-db
-spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: digitized-db
   replicas: 1
   template:
     metadata:
       labels:
-        app: digitized-db
+        tier: backend
+        run: digitized-db
     spec:
       containers:
       - name: digitized-db
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:mongo
+        image: mongo
         volumeMounts:
         - name: digitized-db
           mountPath: /data/db
-          subPath: digitized-db
+          subPath: commonpipeline/digitized-db
       volumes:
-      - name: digitized-db
-        persistentVolumeClaim:
-           claimName: digitized-db
+       - name: digitized-db
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
   name: digitized-db
+  labels:
+    tier: backend
+    run: digitized-db
 spec:
-  selector:
-    app: digitized-db
   ports:
-    - port: 27017 # Default port for image
-      targetPort: 27017
+  - port: 27017
+    protocol: TCP
+  selector:
+    tier: backend
+    run: digitized-db
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: dl-attribute-extractor
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dl-attribute-extractor
   replicas: 1
   template:
     metadata:
       labels:
-        app: dl-attribute-extractor
+        tier: backend
+        run: dl-attribute-extractor
     spec:
       containers:
       - name: dl-attribute-extractor
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:lae-dl-attribute-extractor
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:lae-dl-attribute-extractor
+        imagePullPolicy: Always
+        volumeMounts:
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
-
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
   name: dl-attribute-extractor
+  labels:
+    tier: backend
+    run: dl-attribute-extractor
 spec:
-  selector:
-    app: dl-attribute-extractor
   ports:
-    - port: 8020 # Default port for image
-      targetPort: 8020
+  - port: 8020
+    protocol: TCP
+  selector:
+    tier: backend
+    run: dl-attribute-extractor
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: doc-classfier-ui
+  name: doc-type-identifier
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: doc-type-identifier
   replicas: 1
   template:
     metadata:
       labels:
-        app: doc-classfier-ui
+        tier: backend
+        run: doc-type-identifier
     spec:
       containers:
-      - name: doc-classfier-ui
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:mongo
+      - name:  doc-type-identifier
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-doc-type-identifier
+        imagePullPolicy: Always
         volumeMounts:
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
-        - name: ci-4
-          mountPath: /usr/share/nginx/html/resources
-          subPath: GA-DC/DCOutput
+        - name:  commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
       volumes:
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
-      - name: ci-4
-        persistentVolumeClaim:
-           claimName: ci-4
+       - name:  commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
-metadata:
-  name: doc-classfier-ui
-spec:
-  selector:
-    app: doc-classfier-ui
-  ports:
-    - port: 4200 # Default port for image
-      targetPort: 4200
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: doc-proc-lease-attri-extractor
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: doc-proc-lease-attri-extractor
-    spec:
-      containers:
-      - name: doc-proc-lease-attri-extractor
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-ui
-        volumeMounts:
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
-        - name: ci-3
-          mountPath: /outbound
-          subPath: GA-DC/classifierreviewer-output
-      volumes:
-      - name: ci-3
-        persistentVolumeClaim:
-           claimName: ci-3
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
-      imagePullSecrets:
-      - name: aws-registry
----
 kind: Service
-apiVersion: v1
 metadata:
-  name: doc-proc-lease-attri-extractor
+  name: doc-type-identifier
+  labels:
+    tier: backend
+    run: doc-type-identifier
 spec:
-  selector:
-    app: doc-proc-lease-attri-extractor
   ports:
-    - port: 8005 # Default port for image
-      targetPort: 8005
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: doc-processing-ui
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: doc-processing-ui
-    spec:
-      containers:
-      - name: doc-processing-ui
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-processing-ui
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: doc-processing-ui
-spec:
+  - port: 8895
+    protocol: TCP
   selector:
-    app: doc-processing-ui
-  ports:
-    - port: 4200 # Default port for image
-      targetPort: 4200
+    tier: backend
+    run: doc-type-identifier
 ---
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: docket-queue
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: docket-queue
-    spec:
-      containers:
-      - name: docket-queue
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-docket-queue
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: docket-queue
-spec:
-  selector:
-    app: docket-queue
-  ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
----
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: document-alignment
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: document-alignment
   replicas: 1
   template:
     metadata:
       labels:
-        app: document-alignment
+        tier: backend
+        run: document-alignment
     spec:
       containers:
-      - name: document-alignment
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:erm-document-alignment
+      - name:  document-alignment
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:erm_document_alignment
+        imagePullPolicy: Always
+        volumeMounts:
+        - name:  commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name:  commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
   name: document-alignment
+  labels:
+    tier: backend
+    run: document-alignment
 spec:
-  selector:
-    app: document-alignment
   ports:
-    - port: 8885 # Default port for image
-      targetPort: 8885
+  - port: 8885
+    protocol: TCP
+  selector:
+    tier: backend
+    run: document-alignment
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: document-type-identifier
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: document-type-identifier
   replicas: 1
   template:
     metadata:
       labels:
-        app: document-type-identifier
+        tier: backend
+        run: document-type-identifier
     spec:
       containers:
-      - name: document-type-identifier
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-document-type-identifier
+      - name:  document-type-identifier
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_document_type_identifier
+        imagePullPolicy: Always
         volumeMounts:
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
+        - name:  commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
       volumes:
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
+       - name:  commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
   name: document-type-identifier
+  labels:
+    tier: backend
+    run: document-type-identifier
 spec:
-  selector:
-    app: document-type-identifier
   ports:
-    - port: 8895 # Default port for image
-      targetPort: 8895
+  - port: 8895
+    protocol: TCP
+  selector:
+    run: document-type-identifier
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: file-renderer
+  name: dvs-garnish-ui
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dvs-garnish-ui
   replicas: 1
   template:
     metadata:
       labels:
-        app: file-renderer
+        tier: backend
+        run: dvs-garnish-ui
     spec:
       containers:
-      - name: file-renderer
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-proc-file-renderer
+      - name:  dvs-garnish-ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-dvs-garnish-ui
+        imagePullPolicy: Always
+      imagePullSecrets:
+       - name: aws-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dvs-garnish-ui
+  labels:
+    tier: backend
+    run: dvs-garnish-ui
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  type: NodePort
+  selector:
+    tier: backend
+    run: dvs-garnish-ui
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dvs-garnishment-alight
+spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: dvs-garnishment-alight
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        tier: backend
+        run: dvs-garnishment-alight
+    spec:
+      containers:
+      - name:  dvs-garnishment-alight
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:dvs-garnishment-alight
+        imagePullPolicy: Always
+      imagePullSecrets:
+       - name: aws-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dvs-garnishment-alight
+  labels:
+    tier: backend
+    run: dvs-garnishment-alight
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  type: NodePort
+  selector:
+    tier: backend
+    run: dvs-garnishment-alight
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: file-converter-service
+spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: file-converter-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        tier: backend
+        run: file-converter-service
+    spec:
+      containers:
+      - name:  file-converter-service
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-file-converter-service
+        imagePullPolicy: Always
         volumeMounts:
-        - name: ci-3
-          mountPath: /outbound
-          subPath: GA-DC/classifierreviewer-output
-        - name: ci-2
-          mountPath: /upload
-          subPath: GA-DC/input
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
+        - name:  commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
       volumes:
-      - name: ci-2
-        persistentVolumeClaim:
-           claimName: ci-2
-      - name: ci-3
-        persistentVolumeClaim:
-           claimName: ci-3
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
+       - name:  commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: file-renderer
+  name: file-converter-service
+  labels:
+    tier: backend
+    run: file-converter-service
 spec:
-  selector:
-    app: file-renderer
   ports:
-    - port: 8065 # Default port for image
-      targetPort: 8065
+  - port: 5005
+    protocol: TCP
+  selector:
+    tier: backend
+    run: file-converter-service
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: file-server
+  name: ftr-extraction-service
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: ftr-extraction-service
   replicas: 1
   template:
     metadata:
       labels:
-        app: file-server
+        tier: backend
+        run: ftr-extraction-service
     spec:
       containers:
-      - name: file-server
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-file-server
+      - name:  ftr-extraction-service
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonp_ftr_extraction_service
+        imagePullPolicy: Always
         volumeMounts:
-        - name: ci-2
-          mountPath: /app/upload
-          subPath: GA-DC/input
+        - name:  commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
       volumes:
-      - name: ci-2
-        persistentVolumeClaim:
-           claimName: ci-2
+       - name:  commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: file-server
+  name: ftr-extraction-service
+  labels:
+    tier: backend
+    run: ftr-extraction-service
 spec:
-  selector:
-    app: file-server
   ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
+  - port: 8040
+    protocol: TCP
+  selector:
+    tier: backend
+    run: ftr-extraction-service
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: law-attr-extract
+  name: hocr-service
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: hocr-service
   replicas: 1
   template:
     metadata:
       labels:
-        app: law-attr-extract
+        tier: backend
+        run: hocr-service
     spec:
       containers:
-      - name: law-attr-extract
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:contract-review-law-attr-extract
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: law-attr-extract
-spec:
-  selector:
-    app: law-attr-extract
-  ports:
-    - port: 8020 # Default port for image
-      targetPort: 8020
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: mongo-db
-  annotations:
-    volume.beta.kubernetes.io/storage-class: "aws-efs"
-spec:
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 1Gi
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: mongo-db
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: mongo-db
-    spec:
-      containers:
-      - name: mongo-db
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:mongo
+      - name:  hocr-service
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_hocr-service
+        imagePullPolicy: Always
         volumeMounts:
-        - name: mongo-db
+        - name:  commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name:  commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
+      imagePullSecrets:
+       - name: aws-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hocr-service
+  labels:
+    tier: backend
+    run: hocr-service
+spec:
+  ports:
+  - port: 6001
+    protocol: TCP
+  selector:
+    tier: backend
+    run: hocr-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: it-ops-dao
+spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: it-ops-dao
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        tier: backend
+        run: it-ops-dao
+    spec:
+      containers:
+      - name:  it-ops-dao
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_it-ops-dao
+        imagePullPolicy: Always
+      imagePullSecrets:
+       - name: aws-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: it-ops-dao
+  labels:
+    tier: backend
+    run: it-ops-dao
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: it-ops-dao
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: it-ops-ui
+spec:
+  selector:
+    matchLabels:
+      run: it-ops-ui
+      tier: backend
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: it-ops-ui
+        tier: backend
+    spec:
+      containers:
+      - name:  it-ops-ui
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:it_ops_ui
+        imagePullPolicy: Always
+      imagePullSecrets:
+       - name: aws-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: it-ops-ui
+  labels:
+    run: it-ops-ui
+    tier: backend
+spec:
+  ports:
+  - port: 4200
+    protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: it-ops-ui-lb
+spec:
+  ports:
+  - port: 443
+    name: it-ops-ui-lb
+    targetPort: 4200
+    protocol: TCP
+  selector:
+    run: it-ops-ui
+    tier: backend
+  type: LoadBalancer
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jenkins-connector
+spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: jenkins-connector
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        tier: backend
+        run: jenkins-connector
+    spec:
+      containers:
+      - name:  jenkins-connector
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:jenkins-connector
+        imagePullPolicy: Always
+      imagePullSecrets:
+       - name: aws-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jenkins-connector
+  labels:
+    tier: backend
+    run: jenkins-connector
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: jenkins-connector
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lease-attribute-extractor
+spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: lease-attribute-extractor
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        tier: backend
+        run: lease-attribute-extractor
+    spec:
+      containers:
+      - name:  lease-attribute-extractor
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:lease-attribute-extractor
+        imagePullPolicy: Always
+        volumeMounts:
+        - name:  commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
+      volumes:
+       - name:  commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
+      imagePullSecrets:
+       - name: aws-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lease-attribute-extractor
+  labels:
+    tier: backend
+    run: lease-attribute-extractor
+spec:
+  ports:
+  - port: 8005
+    protocol: TCP
+  selector:
+    tier: backend
+    run: lease-attribute-extractor
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: operational-db
+spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: operational-db
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        tier: backend
+        run: operational-db
+    spec:
+      containers:
+      - name: operational-db
+        image: mongo
+        volumeMounts:
+        - name: operational-db
           mountPath: /data/db
-          subPath: mongo-db
+          subPath: commonpipeline/operational-db
       volumes:
-      - name: mongo-db
-        persistentVolumeClaim:
-           claimName: mongo-db
+       - name: operational-db
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: mongo-db
+  name: operational-db
+  labels:
+    tier: backend
+    run: operational-db
 spec:
-  selector:
-    app: mongo-db
   ports:
-    - port: 27017 # Default port for image
-      targetPort: 27017
+  - port: 27017
+    protocol: TCP
+  selector:
+    tier: backend
+    run: operational-db
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: orch-attr-extractor
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: orch-attr-extractor
   replicas: 1
   template:
     metadata:
       labels:
-        app: orch-attr-extractor
+        tier: backend
+        run: orch-attr-extractor
     spec:
       containers:
       - name: orch-attr-extractor
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:orch-attr-extractor
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_orch_attr_extractor
+        imagePullPolicy: Always
         volumeMounts:
-        - name: ci-3
-          mountPath: /outbound
-          subPath: GA-DC/classifierreviewer-output
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
       volumes:
-      - name: ci-3
-        persistentVolumeClaim:
-           claimName: ci-3
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
   name: orch-attr-extractor
+  labels:
+    tier: backend
+    run: orch-attr-extractor
 spec:
-  selector:
-    app: orch-attr-extractor
   ports:
-    - port: 5001 # Default port for image
-      targetPort: 5001
+  - port: 5001
+    protocol: TCP
+  selector:
+    tier: backend
+    run: orch-attr-extractor
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pdf-bookmarking-service
+  name: pdf-to-html
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: pdf-to-html
   replicas: 1
   template:
     metadata:
       labels:
-        app: pdf-bookmarking-service
+        tier: backend
+        run: pdf-to-html
     spec:
       containers:
-      - name: pdf-bookmarking-service
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-pdf-bookmarking
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: pdf-bookmarking-service
-spec:
-  selector:
-    app: pdf-bookmarking-service
-  ports:
-    - port: 8083 # Default port for image
-      targetPort: 8083
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: pdf2html-erm
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: pdf2html-erm
-    spec:
-      containers:
-      - name: pdf2html-erm
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:doc-classifier-pdf2html
+      - name: pdf-to-html
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-pdf-to-html
+        imagePullPolicy: Always
         volumeMounts:
-        - name: ci-4
-          mountPath: /erm/uploads
-          subPath: GA-DC/dc_data
-        - name: ci-2
-          mountPath: /erm/upload
-          subPath: GA-DC/input
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
+        - name: commonpipeline
+          mountPath: /Holmes
+          subPath: commonpipeline/Holmes
       volumes:
-      - name: ci-4
-        persistentVolumeClaim:
-           claimName: ci-4
-      - name: ci-2
-        persistentVolumeClaim:
-           claimName: ci-2
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
+       - name: commonpipeline
+         persistentVolumeClaim:
+          claimName: commonpipeline
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: pdf2html-erm
+  name: pdf-to-html
+  labels:
+    tier: backend
+    run: pdf-to-html
 spec:
-  selector:
-    app: pdf2html-erm
   ports:
-    - port: 5001 # Default port for image
-      targetPort: 5001
+  - port: 5001
+    protocol: TCP
+  selector:
+    tier: backend
+    run: pdf-to-html
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: pdf2html-erm-1
+  name: portaldao
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: portaldao
   replicas: 1
   template:
     metadata:
       labels:
-        app: pdf2html-erm-1
+        tier: backend
+        run: portaldao
     spec:
       containers:
-      - name: pdf2html-erm-1
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:erm_pdf2html
-        volumeMounts:
-        - name: ci-4
-          mountPath: /erm/uploads
-          subPath: GA-DC/dc_data
-      volumes:
-      - name: ci-4
-        persistentVolumeClaim:
-           claimName: ci-4
+      - name: portaldao
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_dev_portaldao
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: pdf2html-erm-1
+  name: portaldao
+  labels:
+    tier: backend
+    run: portaldao
 spec:
-  selector:
-    app: pdf2html-erm-1
   ports:
-    - port: 5001 # Default port for image
-      targetPort: 5001
+  - port: 8022
+    protocol: TCP
+  selector:
+    tier: backend
+    run: portaldao
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: portal-dao
+  name: rolesandtasks
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: rolesandtasks
   replicas: 1
   template:
     metadata:
       labels:
-        app: portal-dao
+        tier: backend
+        run: rolesandtasks
     spec:
       containers:
-      - name: portal-dao
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:v3-portal-dao
-        volumeMounts:
-        - name: ci
-          mountPath: /GA/excelConfig
-          subPath: GAV3-DC/excelConfig
-      volumes:
-      - name: ci
-        persistentVolumeClaim:
-           claimName: ci
+      - name: rolesandtasks
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline-rolesandtasks
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: portal-dao
+  name: rolesandtasks
+  labels:
+    tier: backend
+    run: rolesandtasks
 spec:
-  selector:
-    app: portal-dao
   ports:
-    - port: 8022 # Default port for image
-      targetPort: 8022
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: rolesandtasks
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: portal-training-initiator
+  name: rulesvalidator
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: rulesvalidator
   replicas: 1
   template:
     metadata:
       labels:
-        app: portal-training-initiator
+        tier: backend
+        run: rulesvalidator
     spec:
       containers:
-      - name: portal-training-initiator
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:v3-portal-training-initiator
+      - name: rulesvalidator
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:rulesvalidator
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: portal-training-initiator
+  name: rulesvalidator
+  labels:
+    tier: backend
+    run: rulesvalidator
 spec:
-  selector:
-    app: portal-training-initiator
   ports:
-    - port: 8020 # Default port for image
-      targetPort: 8020
+  - port: 8083
+    protocol: TCP
+  selector:
+    tier: backend
+    run: rulesvalidator
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: portalv3-dl-attribute-extractor
+  name: sop-automation
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: sop-automation
   replicas: 1
   template:
     metadata:
       labels:
-        app: portalv3-dl-attribute-extractor
+        tier: backend
+        run: sop-automation
     spec:
       containers:
-      - name: portalv3-dl-attribute-extractor
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:portalv3-dl-attribute-extractor
+      - name: sop-automation
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:sop-automation
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: portalv3-dl-attribute-extractor
+  name: sop-automation
+  labels:
+    tier: backend
+    run: sop-automation
 spec:
-  selector:
-    app: portalv3-dl-attribute-extractor
   ports:
-    - port: 8020 # Default port for image
-      targetPort: 8020
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: sop-automation
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: portalv3-document-type-identifier
+  name: studio-notifier-service
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: studio-notifier-service
   replicas: 1
   template:
     metadata:
       labels:
-        app: portalv3-document-type-identifier
+        tier: backend
+        run: studio-notifier-service
     spec:
       containers:
-      - name: portalv3-document-type-identifier
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:portalv3-document-type-identifier
-        volumeMounts:
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
-      volumes:
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
+      - name: studio-notifier-service
+        imagePullPolicy: Always
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_studio-notifier-service
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: portalv3-document-type-identifier
+  name: studio-notifier-service
+  labels:
+    tier: backend
+    run: studio-notifier-service
 spec:
-  selector:
-    app: portalv3-document-type-identifier
   ports:
-    - port: 8895 # Default port for image
-      targetPort: 8895
-
+  - port: 8080
+    protocol: TCP
+  selector:
+    tier: backend
+    run: studio-notifier-service
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: portalv3-sow-attributes-extractor
+  name: traininginitiator
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: traininginitiator
   replicas: 1
   template:
     metadata:
       labels:
-        app: portalv3-sow-attributes-extractor
+        tier: backend
+        run: traininginitiator
     spec:
       containers:
-      - name: portalv3-sow-attributes-extractor
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:portalv3-document-type-identifier
-        volumeMounts:
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
-        - name: ci-3
-          mountPath: /outbound
-          subPath: GA-DC/classifierreviewer-output
-      volumes:
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
-      - name: ci-3
-        persistentVolumeClaim:
-           claimName: ci-3
+      - name: traininginitiator
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_traininginitiator
+        imagePullPolicy: Always
       imagePullSecrets:
-      - name: aws-registry
+       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: portalv3-document-type-identifier
+  name: traininginitiator
+  labels:
+    tier: backend
+    run: traininginitiator
 spec:
-  selector:
-    app: portalv3-document-type-identifier
   ports:
-    - port: 8005 # Default port for image
-      targetPort: 8005
+  - port: 8023
+    protocol: TCP
+  selector:
+    tier: backend
+    run: traininginitiator
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ref-msa-attr
+  name: user-management
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: user-management
   replicas: 1
   template:
     metadata:
       labels:
-        app: ref-msa-attr
+        tier: backend
+        run: user-management
     spec:
       containers:
-      - name: ref-msa-attr
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:msa-attr
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: ref-msa-attr
-spec:
-  selector:
-    app: ref-msa-attr
-  ports:
-    - port: 8020 # Default port for image
-      targetPort: 8020
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: ref-msa-clause-attr
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: ref-msa-clause-attr
-    spec:
-      containers:
-      - name: ref-msa-clause-attr
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-doc-classifier-ui
-        volumeMounts:
-        - name: ci-5
-          mountPath: /DCOutput
-          subPath: GA-DC/DCOutput
-
-        - name: ci-4
-          mountPath: /usr/share/nginx/html/resources
-          subPath: GA-DC/DCOutput
-
-      volumes:
-      - name: ci-5
-        persistentVolumeClaim:
-           claimName: ci-5
-
-      - name: ci-4
-        persistentVolumeClaim:
-           claimName: ci-4
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: ref-msa-clause-attr
-spec:
-  selector:
-    app: ref-msa-clause-attr
-  ports:
-    - port: 8006 # Default port for image
-      targetPort: 8006
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: ref-order-form-attr
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: ref-order-form-attr
-    spec:
-      containers:
-      - name: ref-order-form-attr
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:attr-orderform
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: ref-order-form-attr
-spec:
-  selector:
-    app: ref-order-form-attr
-  ports:
-    - port: 8020 # Default port for image
-      targetPort: 8020
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: ui
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: ui
-    spec:
-      containers:
-      - name: ui
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-app-config-ui
-      imagePullSecrets:
-      - name: aws-registry
----
-kind: Service
-apiVersion: v1
-metadata:
-  name: ui
-spec:
-  selector:
-    app: ui
-  ports:
-    - port: 4200 # Default port for image
-      targetPort: 4200
----
-apiVersion: extensions/v1beta1
-kind: Deployment
-metadata:
-  name: user-managemen
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: user-managemen
-    spec:
-      containers:
-      - name: user-managemen
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:v3-portal-user-management
+      - name: user-management
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:v3-portal-user-management
+        imagePullPolicy: Always
         env:
         - name: allowed_origins
-          value: "http://10.235.112.135:4200,http://localhost:4400,http://localhost:4200,http://10.235.112.135:8032,http://localhost:4300,http://10.235.112.135:8011,http://10.235.112.135:8018"
+          value: "http://10.235.112.135:4200,http://localhost:4400,http://localhost:4200,http://10.235.112.135:8032"
         - name: content_origins
           value: "http://10.235.112.135:4200"
         - name: enable_ldap
@@ -1821,41 +1853,66 @@ spec:
       imagePullSecrets:
       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: user-managemen
+  name: user-management
+  labels:
+    tier: backend
+    run: user-management
 spec:
-  selector:
-    app: user-managemen
   ports:
-    - port: 8021 # Default port for image
-      targetPort: 8021
+  - port: 8021
+    protocol: TCP
+  selector:
+    tier: backend
+    run: user-management
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: web-socket
+  name: usermanagement-contract-abstraction-dev
 spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: usermanagement-contract-abstraction-dev
   replicas: 1
   template:
     metadata:
       labels:
-        app: web-socket
+        tier: backend
+        run: usermanagement-contract-abstraction-dev
     spec:
       containers:
-      - name: web-socket
-        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/portalv3:ci-v2-data-ops-web-socket
+      - name: usermanagement-contract-abstraction-dev
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:usermanagement_contract-abstraction-dev
+        imagePullPolicy: Always
+        env:
+        - name: allowed_origins
+          value: "http://10.235.112.135:4200,http://localhost:4400,http://localhost:4200,http://10.235.112.135:8032"
+        - name: content_origins
+          value: "http://10.235.112.135:4200"
+        - name: enable_ldap
+          value: "false"
+        - name: ldap_domain_name
+          value: "wipro.com"
+        - name: ldap_url
+          value: "ldap://pne-hjn-dc05.wipro.com:389/"
       imagePullSecrets:
       - name: aws-registry
 ---
-kind: Service
 apiVersion: v1
+kind: Service
 metadata:
-  name: web-socket
+  name: usermanagement-contract-abstraction-dev
+  labels:
+    tier: backend
+    run: usermanagement-contract-abstraction-dev
 spec:
-  selector:
-    app: web-socket
   ports:
-    - port: 8080 # Default port for image
-      targetPort: 8080
+  - port: 8021
+    protocol: TCP
+  selector:
+    tier: backend
+    run: usermanagement-contract-abstraction-dev
