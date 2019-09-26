@@ -1916,3 +1916,52 @@ spec:
   selector:
     tier: backend
     run: usermanagement-contract-abstraction-dev
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sftp
+spec:
+  selector:
+    matchLabels:
+      tier: backend
+      run: sftp
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        tier: backend
+        run: sftp
+    spec:
+      containers:
+      - name: sftp
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:sftp
+        imagePullPolicy: Always
+        args: ["foo:pass:1001:100:incoming,outgoing"]
+        volumeMounts:
+        - name: commonpipeline
+          mountPath: /home/foo/upload
+          subPath: commonpipeline/Holmes
+      volumes:
+      - name: commonpipeline
+        persistentVolumeClaim:
+           claimName: commonpipeline
+      imagePullSecrets:
+      - name: aws-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sftp
+  labels:
+    tier: backend
+    run: sftp
+spec:
+  ports:
+  - port: 2222
+    targetPort: 22
+    protocol: TCP
+  selector:
+    tier: backend
+    run: sftp
+
