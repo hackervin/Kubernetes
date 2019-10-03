@@ -1,0 +1,56 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"sftp","namespace":"commonpipeline"},"spec":{"replicas":1,"selector":{"matchLabels":{"run":"sftp","tier":"backend"}},"template":{"metadata":{"labels":{"run":"sftp","tier":"backend"}},"spec":{"containers":[{"args":["foo:pass:1001:100:incoming,outgoing"],"image":"091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:sftp","imagePullPolicy":"Always","name":"sftp","volumeMounts":[{"mountPath":"/home/foo/upload","name":"commonpipeline","subPath":"commonpipeline/Holmes"}]}],"imagePullSecrets":[{"name":"aws-registry"}],"volumes":[{"name":"commonpipeline","persistentVolumeClaim":{"claimName":"commonpipeline"}}]}}}}
+  creationTimestamp: null
+  generation: 1
+  name: sftp
+  selfLink: /apis/extensions/v1beta1/namespaces/commonpipeline/deployments/sftp
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      run: sftp
+      tier: backend
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        run: sftp
+        tier: backend
+    spec:
+      containers:
+      - args:
+        - foo:pass:1001:100:incoming,outgoing
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:sftp
+        imagePullPolicy: Always
+        name: sftp
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /home/foo/upload
+          name: commonpipeline
+          subPath: commonpipeline/Holmes
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: aws-registry
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - name: commonpipeline
+        persistentVolumeClaim:
+          claimName: commonpipeline
+status: {}

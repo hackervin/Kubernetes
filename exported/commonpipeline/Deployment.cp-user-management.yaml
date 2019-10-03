@@ -1,0 +1,62 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"name":"cp-user-management","namespace":"commonpipeline"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"cp-user-management","run":"cp-user-management","tier":"backend"}},"template":{"metadata":{"labels":{"app":"cp-user-management","run":"cp-user-management","tier":"backend"}},"spec":{"containers":[{"env":[{"name":"allowed_origins","value":"*"},{"name":"content_origins","value":"*"},{"name":"enable_ldap","value":"false"},{"name":"ldap_domain_name","value":"wipro.com"},{"name":"ldap_url","value":"ldap://pne-hjn-dc05.wipro.com:389/"}],"image":"091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_dev_usermanagement","imagePullPolicy":"Always","name":"cp-user-management","ports":[{"containerPort":8021}]}],"imagePullSecrets":[{"name":"aws-registry"}]}}}}
+  creationTimestamp: null
+  generation: 1
+  name: cp-user-management
+  selfLink: /apis/extensions/v1beta1/namespaces/commonpipeline/deployments/cp-user-management
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: cp-user-management
+      run: cp-user-management
+      tier: backend
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: cp-user-management
+        run: cp-user-management
+        tier: backend
+    spec:
+      containers:
+      - env:
+        - name: allowed_origins
+          value: '*'
+        - name: content_origins
+          value: '*'
+        - name: enable_ldap
+          value: "false"
+        - name: ldap_domain_name
+          value: wipro.com
+        - name: ldap_url
+          value: ldap://pne-hjn-dc05.wipro.com:389/
+        image: 091307694858.dkr.ecr.us-west-2.amazonaws.com/commonpipeline:commonpipeline_dev_usermanagement
+        imagePullPolicy: Always
+        name: cp-user-management
+        ports:
+        - containerPort: 8021
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: aws-registry
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+status: {}

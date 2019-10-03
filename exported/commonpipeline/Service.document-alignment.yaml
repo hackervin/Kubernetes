@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"document-alignment","tier":"backend"},"name":"document-alignment","namespace":"commonpipeline"},"spec":{"ports":[{"port":8885,"protocol":"TCP"}],"selector":{"run":"document-alignment","tier":"backend"}}}
+  creationTimestamp: null
+  labels:
+    run: document-alignment
+    tier: backend
+  name: document-alignment
+  selfLink: /api/v1/namespaces/commonpipeline/services/document-alignment
+spec:
+  ports:
+  - port: 8885
+    protocol: TCP
+    targetPort: 8885
+  selector:
+    run: document-alignment
+    tier: backend
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"dcprocesshocrfiles"},"name":"dcprocesshocrfiles","namespace":"commonpipeline"},"spec":{"ports":[{"port":8080,"protocol":"TCP"}],"selector":{"run":"dcprocesshocrfiles","tier":"backend"}}}
+  creationTimestamp: null
+  labels:
+    run: dcprocesshocrfiles
+  name: dcprocesshocrfiles
+  selfLink: /api/v1/namespaces/commonpipeline/services/dcprocesshocrfiles
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    run: dcprocesshocrfiles
+    tier: backend
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

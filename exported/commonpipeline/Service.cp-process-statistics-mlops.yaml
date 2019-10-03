@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"cp-process-statistics-mlops","tier":"backend"},"name":"cp-process-statistics-mlops","namespace":"commonpipeline"},"spec":{"ports":[{"port":8080,"protocol":"TCP"}],"selector":{"run":"cp-process-statistics-mlops","tier":"backend"}}}
+  creationTimestamp: null
+  labels:
+    run: cp-process-statistics-mlops
+    tier: backend
+  name: cp-process-statistics-mlops
+  selfLink: /api/v1/namespaces/commonpipeline/services/cp-process-statistics-mlops
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    run: cp-process-statistics-mlops
+    tier: backend
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

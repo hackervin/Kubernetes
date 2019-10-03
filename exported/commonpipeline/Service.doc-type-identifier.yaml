@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"doc-type-identifier","tier":"backend"},"name":"doc-type-identifier","namespace":"commonpipeline"},"spec":{"ports":[{"port":8895,"protocol":"TCP"}],"selector":{"run":"doc-type-identifier","tier":"backend"}}}
+  creationTimestamp: null
+  labels:
+    run: doc-type-identifier
+    tier: backend
+  name: doc-type-identifier
+  selfLink: /api/v1/namespaces/commonpipeline/services/doc-type-identifier
+spec:
+  ports:
+  - port: 8895
+    protocol: TCP
+    targetPort: 8895
+  selector:
+    run: doc-type-identifier
+    tier: backend
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

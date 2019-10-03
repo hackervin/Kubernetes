@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"cp-docclassifier-ui","tier":"backend"},"name":"cp-docclassifier-ui","namespace":"commonpipeline"},"spec":{"ports":[{"port":4200,"protocol":"TCP"}],"selector":{"tier":"backend"},"type":"NodePort"}}
+  creationTimestamp: null
+  labels:
+    run: cp-docclassifier-ui
+    tier: backend
+  name: cp-docclassifier-ui
+  selfLink: /api/v1/namespaces/commonpipeline/services/cp-docclassifier-ui
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - port: 4200
+    protocol: TCP
+    targetPort: 4200
+  selector:
+    tier: backend
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}

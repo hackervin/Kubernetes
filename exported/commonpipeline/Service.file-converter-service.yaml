@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"file-converter-service","tier":"backend"},"name":"file-converter-service","namespace":"commonpipeline"},"spec":{"ports":[{"port":5005,"protocol":"TCP"}],"selector":{"run":"file-converter-service","tier":"backend"}}}
+  creationTimestamp: null
+  labels:
+    run: file-converter-service
+    tier: backend
+  name: file-converter-service
+  selfLink: /api/v1/namespaces/commonpipeline/services/file-converter-service
+spec:
+  ports:
+  - port: 5005
+    protocol: TCP
+    targetPort: 5005
+  selector:
+    run: file-converter-service
+    tier: backend
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

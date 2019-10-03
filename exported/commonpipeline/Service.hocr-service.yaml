@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"hocr-service","tier":"backend"},"name":"hocr-service","namespace":"commonpipeline"},"spec":{"ports":[{"port":6001,"protocol":"TCP"}],"selector":{"run":"hocr-service","tier":"backend"}}}
+  creationTimestamp: null
+  labels:
+    run: hocr-service
+    tier: backend
+  name: hocr-service
+  selfLink: /api/v1/namespaces/commonpipeline/services/hocr-service
+spec:
+  ports:
+  - port: 6001
+    protocol: TCP
+    targetPort: 6001
+  selector:
+    run: hocr-service
+    tier: backend
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

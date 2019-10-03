@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"dcerrorlogging","tier":"backend"},"name":"dcerrorlogging","namespace":"commonpipeline"},"spec":{"ports":[{"port":8080,"protocol":"TCP"}],"selector":{"run":"dcerrorlogging","tier":"backend"}}}
+  creationTimestamp: null
+  labels:
+    run: dcerrorlogging
+    tier: backend
+  name: dcerrorlogging
+  selfLink: /api/v1/namespaces/commonpipeline/services/dcerrorlogging
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    run: dcerrorlogging
+    tier: backend
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

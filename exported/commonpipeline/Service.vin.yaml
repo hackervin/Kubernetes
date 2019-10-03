@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"cp-user-management","component":"cp-user-management"},"name":"vin","namespace":"commonpipeline"},"spec":{"ports":[{"name":"vin","port":8021,"targetPort":8021}],"selector":{"app":"cp-user-management","component":"cp-user-management"}}}
+  creationTimestamp: null
+  labels:
+    app: cp-user-management
+    component: cp-user-management
+  name: vin
+  selfLink: /api/v1/namespaces/commonpipeline/services/vin
+spec:
+  ports:
+  - name: vin
+    port: 8021
+    protocol: TCP
+    targetPort: 8021
+  selector:
+    app: cp-user-management
+    component: cp-user-management
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

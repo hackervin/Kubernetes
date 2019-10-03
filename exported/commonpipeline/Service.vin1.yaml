@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app":"config-db","component":"config-db"},"name":"vin1","namespace":"commonpipeline"},"spec":{"ports":[{"name":"vin1","port":27017,"targetPort":27017}],"selector":{"app":"config-db","component":"config-db"}}}
+  creationTimestamp: null
+  labels:
+    app: config-db
+    component: config-db
+  name: vin1
+  selfLink: /api/v1/namespaces/commonpipeline/services/vin1
+spec:
+  ports:
+  - name: vin1
+    port: 27017
+    protocol: TCP
+    targetPort: 27017
+  selector:
+    app: config-db
+    component: config-db
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

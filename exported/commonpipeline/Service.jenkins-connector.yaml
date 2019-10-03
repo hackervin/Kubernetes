@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"run":"jenkins-connector","tier":"backend"},"name":"jenkins-connector","namespace":"commonpipeline"},"spec":{"ports":[{"port":8080,"protocol":"TCP"}],"selector":{"run":"jenkins-connector","tier":"backend"}}}
+  creationTimestamp: null
+  labels:
+    run: jenkins-connector
+    tier: backend
+  name: jenkins-connector
+  selfLink: /api/v1/namespaces/commonpipeline/services/jenkins-connector
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    run: jenkins-connector
+    tier: backend
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
