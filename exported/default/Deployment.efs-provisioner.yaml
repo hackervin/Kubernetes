@@ -50,9 +50,9 @@ spec:
               key: provisioner.name
               name: efs-provisioner
         - name: AWS_ACCESS_KEY_ID
-          value: AKIAJRCMHWXDUOWLJ4QA
+          value: XXXXXXXXXXXXXXXXXXX
         - name: AWS_SECRET_ACCESS_KEY
-          value: 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
+          value: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
         image: quay.io/external_storage/efs-provisioner:latest
         imagePullPolicy: Always
         name: efs-provisioner
